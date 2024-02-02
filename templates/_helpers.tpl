@@ -65,27 +65,58 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
     secretKeyRef:
       name: {{ template "docker-registry.fullname" . }}-secret
       key: azureContainer
-{{- else if eq .Values.storage "s3" }}
+{{- else if (eq .Values.storage "s3") }}
+
+{{- if and .Values.s3.region .Values.s3.configRef }}
+- name: REGISTRY_STORAGE_S3_REGION
+  value: {{ .Values.s3.region }}
+{{- else if .Values.s3.configRef }}
+- name: REGISTRY_STORAGE_S3_REGION
+  valueFrom:
+    configMapKeyRef:
+      name: {{ .Values.s3.configRef }}
+      key: BUCKET_REGION
+{{- else }}
 - name: REGISTRY_STORAGE_S3_REGION
   value: {{ required ".Values.s3.region is required" .Values.s3.region }}
+{{- end }}
+
+{{- if and .Values.s3.bucket .Values.s3.configRef }}
+- name: REGISTRY_STORAGE_S3_BUCKET
+  value: {{ .Values.s3.bucket }}
+{{- else if .Values.s3.configRef }}
+- name: REGISTRY_STORAGE_S3_BUCKET
+  valueFrom:
+    configMapKeyRef:
+      name: {{ .Values.s3.configRef }}
+      key: BUCKET_NAME
+{{- else }}
 - name: REGISTRY_STORAGE_S3_BUCKET
   value: {{ required ".Values.s3.bucket is required" .Values.s3.bucket }}
-{{- if or (and .Values.secrets.s3.secretKey .Values.secrets.s3.accessKey) .Values.secrets.s3.secretRef }}
+{{- end }}
+
+{{- if or (and .Values.secrets.s3.secretKey .Values.secrets.s3.accessKey) .Values.secrets.s3.secretRef .Values.secrets.s3.secretRef.name }}
 - name: REGISTRY_STORAGE_S3_ACCESSKEY
   valueFrom:
     secretKeyRef:
-      name: {{ if .Values.secrets.s3.secretRef }}{{ .Values.secrets.s3.secretRef }}{{ else }}{{ template "docker-registry.fullname" . }}-secret{{ end }}
-      key: s3AccessKey
+      name: {{ if eq (kindOf .Values.secrets.s3.secretRef) "map" }}{{ .Values.secrets.s3.secretRef.name }}{{ else if .Values.secrets.s3.secretRef }}{{ .Values.secrets.s3.secretRef }}{{ else }}{{ template "docker-registry.fullname" . }}-secret{{ end }}
+      key: {{ if and (eq (kindOf .Values.secrets.s3.secretRef) "map") ( .Values.secrets.s3.secretRef.accessKey ) }}{{ .Values.secrets.s3.secretRef.accessKey }}{{ else }}s3AccessKey{{ end }}
 - name: REGISTRY_STORAGE_S3_SECRETKEY
   valueFrom:
     secretKeyRef:
-      name: {{ if .Values.secrets.s3.secretRef }}{{ .Values.secrets.s3.secretRef }}{{ else }}{{ template "docker-registry.fullname" . }}-secret{{ end }}
-      key: s3SecretKey
+      name: {{ if eq (kindOf .Values.secrets.s3.secretRef) "map" }}{{ .Values.secrets.s3.secretRef.name }}{{ else if .Values.secrets.s3.secretRef }}{{ .Values.secrets.s3.secretRef }}{{ else }}{{ template "docker-registry.fullname" . }}-secret{{ end }}
+      key: {{ if and (eq (kindOf .Values.secrets.s3.secretRef) "map") ( .Values.secrets.s3.secretRef.secretKey ) }}{{ .Values.secrets.s3.secretRef.secretKey }}{{ else }}s3SecretKey{{ end }}
 {{- end -}}
 
 {{- if .Values.s3.regionEndpoint }}
 - name: REGISTRY_STORAGE_S3_REGIONENDPOINT
   value: {{ .Values.s3.regionEndpoint }}
+{{- else if .Values.s3.configRef }}
+- name: REGISTRY_STORAGE_S3_REGIONENDPOINT
+  valueFrom:
+    configMapKeyRef:
+      name: {{ .Values.s3.configRef }}
+      key: BUCKET_HOST
 {{- end -}}
 
 {{- if .Values.s3.rootdirectory }}

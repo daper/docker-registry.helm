@@ -73,11 +73,15 @@ their default values.
 | `secrets.htpasswd`          | Htpasswd authentication                                                                    | `nil`           |
 | `secrets.s3.accessKey`      | Access Key for S3 configuration                                                            | `nil`           |
 | `secrets.s3.secretKey`      | Secret Key for S3 configuration                                                            | `nil`           |
-| `secrets.s3.secretRef`      | The ref for an external secret containing the accessKey and secretKey keys                 | `""`            |
+| `secrets.s3.secretRef`      | The ref for an external secret                                                             | `{}`            |
+| `secrets.s3.secretRef.name` | The name of the external secret                                                            | `nil`           |
+| `secrets.s3.secretRef.accessKey` | The ref for an external secret                                                        | `nil`           |
+| `secrets.s3.secretRef.secretKey` | The ref for an external secret                                                        | `nil`           |
 | `secrets.swift.username`    | Username for Swift configuration                                                           | `nil`           |
 | `secrets.swift.password`    | Password for Swift configuration                                                           | `nil`           |
 | `secrets.haSharedSecret`    | Shared secret for Registry                                                                 | `nil`           |
 | `configData`                | Configuration hash for docker                                                              | `nil`           |
+| `s3.configRef`              | The ref for an external configmap                                                          | `nil`           |
 | `s3.region`                 | S3 region                                                                                  | `nil`           |
 | `s3.regionEndpoint`         | S3 region endpoint                                                                         | `nil`           |
 | `s3.bucket`                 | S3 bucket name                                                                             | `nil`           |
